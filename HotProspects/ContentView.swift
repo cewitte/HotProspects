@@ -7,12 +7,22 @@
 
 import SwiftUI
 import UserNotifications
+import SamplePackage
 
 struct ContentView: View {
     let users = ["Tohru", "Yuki", "Kyo", "Momiji"]
     @State private var selection = Set<String>()
     @State private var output: String = "Blah"
     @State private var backgroundColor: Color = .red
+    
+    var results: String {
+        let selected = possibleNumbers.random(7).sorted()
+        let strings = selected.map(String.init)
+        return strings.formatted()
+    }
+    
+    let possibleNumbers = 1...60
+    
     
     var body: some View {
         Image(.example)
@@ -83,6 +93,8 @@ struct ContentView: View {
                 UNUserNotificationCenter.current().add(request)
             }
         }
+        
+        Text(results)
         
         if !selection.isEmpty {
             Text("You selected: \(selection.formatted())")
