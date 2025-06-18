@@ -97,6 +97,96 @@ The result:
   <img src="./images/interpolation_none.png" width="300"/>
 </div>
 
+### Creating context menus
+
+Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/creating-context-menus)
+
+>SwiftUI lets us attach context menus to objects to provide this extra functionality, all done using the `contextMenu()` modifier. You can pass this a selection of buttons and they’ll be shown in order, so we could build a simple context menu to control a view’s background color like this:
+
+```swift
+Text("Hello, color!")
+    .padding()
+    .background(backgroundColor)
+
+Text("Change Color")
+    .padding()
+    .contextMenu {
+        Button("Red", systemImage: "checkmark.circle.fill", role: .destructive) {
+            backgroundColor = .red
+        }
+        
+        Button("Green") {
+            backgroundColor = .green
+        }
+        
+        Button("Blue") {
+            backgroundColor = .blue
+        }
+    }
+```
+
+### Adding custom row swipe actions to a List
+
+Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/adding-custom-row-swipe-actions-to-a-list)
+
+>We get this full functionality in SwiftUI using the `swipeActions()1 modifier, which lets us register one or more buttons on one or both sides of a list row. By default buttons will be placed on the right edge of the row, and won’t have any color, so this will show a single gray button when you swipe from right to left.
+
+```swift
+List(users, id:\.self, selection: $selection) { user in
+    Text(user)
+        .swipeActions {
+            Button("Delete", systemImage: "minus.circle", role: .destructive) {
+                print("Deleting")
+            }
+        }
+        .swipeActions(edge: .leading) {
+            Button("Pin", systemImage: "pin") {
+                print("Pinning")
+            }
+            .tint(.orange)
+        }
+}
+```
+### Scheduling local notifications
+
+Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/scheduling-local-notifications)
+
+>iOS has a framework called UserNotifications that does pretty much exactly what you expect: lets us create notifications to the user that can be shown on the lock screen. We have two types of notifications to work with, and they differ depending on where they were created: local notifications are ones we schedule locally, and remote notifications (commonly called push notifications) are sent from a server somewhere.
+
+>Remote notifications require a server to work, because you send your message to Apple’s push notification service (APNS), which then forwards it to users. But local notifications are nice and easy in comparison, because we can send any message at any time as long as the user allows it.
+
+Here's the code:
+
+```swift
+VStack {
+    Button("Request Permission") {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
+            if success {
+                print("All set!")
+            } else if let error {
+                print(error.localizedDescription)
+            }
+        }
+    }
+
+    Button("Schedule Notification") {
+        let content = UNMutableNotificationContent()
+        content.title = "Feed the cat"
+        content.subtitle = "It looks hungry"
+        content.sound = UNNotificationSound.default
+
+        // show this notification five seconds from now
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
+
+        // choose a random identifier
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+
+        // add our notification request
+        UNUserNotificationCenter.current().add(request)
+    }
+}
+```
+
 ## Acknowledgments
 
 Original code created by: [Paul Hudson - @twostraws](https://x.com/twostraws) (Thank you!)
