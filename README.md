@@ -37,6 +37,46 @@ struct ContentView: View {
 }
 ```
 
+### Understanding Swift’s Result type
+
+Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/understanding-swifts-result-type)
+
+> Swift provides a special type called Result that allows us to encapsulate either a successful value or some kind of error type, all in a single piece of data. So, in the same way that an optional might hold a string or might hold nothing at all, for example, Result might hold a string or might hold an error. The syntax for using it is a little odd at first, but it does have an important part to play in our projects.
+
+`Result`is really interesting, although its syntax is a bit odd. Here's Paul's example usage:
+
+```swift
+func fetchReadings() async {
+    let fetchTask = Task {
+        let url = URL(string: "https://hws.dev/readings.json")!
+        let (data, _) = try await URLSession.shared.data(from: url)
+        let readings = try JSONDecoder().decode([Double].self, from: data)
+        return "Found \(readings.count) readings"
+    }
+}
+```
+
+Paul presents two options for handling `Result`, my preferred way...
+
+```swift
+do {
+    output = try result.get()
+} catch {
+    output = "Error: \(error.localizedDescription)"
+}
+```
+
+... and through the `switch` statement as below:
+
+```swift
+switch result {
+    case .success(let str):
+        output = str
+    case .failure(let error):
+        output = "Error: \(error.localizedDescription)"
+}
+````
+
 ## Acknowledgments
 
 Original code created by: [Paul Hudson - @twostraws](https://x.com/twostraws) (Thank you!)
