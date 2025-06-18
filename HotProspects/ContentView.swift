@@ -13,6 +13,12 @@ struct ContentView: View {
     @State private var output: String = "Blah"
     
     var body: some View {
+        Image(.example)
+            .interpolation(.none)
+            .resizable()
+            .scaledToFit()
+            .background(.black)
+        
         List(users, id:\.self, selection: $selection) { user in
             Text(user)
         }

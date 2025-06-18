@@ -12,7 +12,9 @@ Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/letting-us
 
 Really interesting technique for letting users select multiple items in a list and present it in a readable way (see animation below):
 
-![Multiple Selection](./images/multiple_selection.gif)
+<div align="center">
+  <img src="./images/multiple_selection.gif" width="300"/>
+</div>
 
 This interesting effect is achieved by adding the `EditButton()` and the `selection.formatted()` in the code below:
 
@@ -75,7 +77,25 @@ switch result {
     case .failure(let error):
         output = "Error: \(error.localizedDescription)"
 }
-````
+```
+
+### Controlling image interpolation in SwiftUI
+
+Basically, `interpolation(.none)` in the code below ensures that the small image will be pixelated, but not blurred, when resized.
+
+```swift
+Image(.example)
+    .interpolation(.none)
+    .resizable()
+    .scaledToFit()
+    .background(.black)
+```
+
+The result:
+
+<div align="center">
+  <img src="./images/interpolation_none.png" width="300"/>
+</div>
 
 ## Acknowledgments
 
