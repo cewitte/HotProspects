@@ -16,7 +16,7 @@ struct ContentView: View {
     @State private var backgroundColor: Color = .red
     
     var results: String {
-        let selected = possibleNumbers.random(7).sorted()
+        let selected = possibleNumbers.random(6).sorted()
         let strings = selected.map(String.init)
         return strings.formatted()
     }
