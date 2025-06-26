@@ -23,7 +23,6 @@ struct ContentView: View {
     
     let possibleNumbers = 1...60
     
-    
     var body: some View {
         Image(.example)
             .interpolation(.none)
