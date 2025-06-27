@@ -147,6 +147,7 @@ List(users, id:\.self, selection: $selection) { user in
         }
 }
 ```
+
 ### Scheduling local notifications
 
 Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/scheduling-local-notifications)
@@ -208,6 +209,35 @@ var results: String {
     let selected = possibleNumbers.random(7).sorted()
     let strings = selected.map(String.init)
     return strings.formatted()
+}
+```
+
+### Building our tab bar
+
+Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/building-our-tab-bar)
+
+Branch: `release`
+
+`TavView`is very easy to be implemented, and the code speaks for itself:
+
+```swift
+TabView {
+    ProspectsView()
+        .tabItem {
+            Label("Everyone", systemImage: "person.3")
+        }
+    ProspectsView()
+        .tabItem {
+            Label("Contacted", systemImage: "checkmark.circle")
+        }
+    ProspectsView()
+        .tabItem {
+            Label("Uncontacted", systemImage: "questionmark.diamond")
+        }
+    MeView()
+        .tabItem {
+            Label("Me", systemImage: "person.crop.square")
+        }
 }
 ```
 
