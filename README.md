@@ -241,6 +241,48 @@ TabView {
 }
 ```
 
+### Storing our data with SwiftData
+
+Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/storing-our-data-with-swiftdata)
+
+Notes on using `SwiftData`:
+
+It requires a class that works as a model, like the one below which includes the `@Model` macro _(note: don't forget to `import SwiftData` whenever `model`, etc are referenced)_:
+
+```swift
+@Model
+class Prospect {
+    var name: String
+    var emailAddress: String
+    var isContacted: Bool
+}
+```
+
+Then add the `.modelContainer()`to hold the data as below:
+
+```swift
+WindowGroup {
+    ContentView()
+}
+.modelContainer(for: Prospect.self)
+```
+
+Finally, use it within your views...
+
+```swift
+@Query(sort: \Prospect.name) var prospects: [Prospect]
+@Environment(\.modelContext) var modelContext
+```
+
+... while not forgetting to add the `.modelContainer` for previews:
+
+```swift
+#Preview {
+    ProspectsView(filter: .none)
+        .modelContainer(for: Prospect.self)
+}
+```
+
 ## Acknowledgments
 
 Original code created by: [Paul Hudson - @twostraws](https://x.com/twostraws) (Thank you!)
