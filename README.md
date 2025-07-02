@@ -283,6 +283,32 @@ Finally, use it within your views...
 }
 ```
 
+### Dynamically filtering our SwiftData query
+
+Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/dynamically-filtering-our-swiftdata-query)
+
+Branch: `release`
+
+The line below queries the database for all the Prospects and assings them to a Prospect array sorted by name.
+
+`@Query(sort: \Prospect.name) var prospects: [Prospect]`
+
+>We already have a default query in place, but if we add an initializer we can override that when a filter is set.
+
+```swift
+init(filter: FilterType) {
+    self.filter = filter
+
+    if filter != .none {
+        let showContactedOnly = filter == .contacted
+
+        _prospects = Query(filter: #Predicate {
+            $0.isContacted == showContactedOnly
+        }, sort: [SortDescriptor(\Prospect.name)])
+    }
+}
+```
+
 ## Acknowledgments
 
 Original code created by: [Paul Hudson - @twostraws](https://x.com/twostraws) (Thank you!)
