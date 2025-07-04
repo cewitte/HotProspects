@@ -309,6 +309,121 @@ init(filter: FilterType) {
 }
 ```
 
+### Generating and scaling up a QR code
+
+Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/generating-and-scaling-up-a-qr-code)
+
+Here Paul teaches us how to create a QRCode in Swift, and perhaps unsurprisingly, Apple has a library to help us do so. The first task is importing this package:
+
+```swift
+import CoreImage.CIFilterBuiltins
+```
+
+Then here's a function that easily creates (but, of course, not reads) QRCodes:
+
+```swift
+func generateQRCode(from string: String) -> UIImage {
+    filter.message = Data(string.utf8)
+    
+    if let outPutImage = filter.outputImage {
+        if let cgimage = context.createCGImage(outPutImage, from: outPutImage.extent) {
+            
+            return UIImage(cgImage: cgimage)
+        }
+    }
+    
+    return UIImage(systemName: "xmark.circle") ?? UIImage()
+}
+```
+
+SwiftUI's image generation process is kind of confusing, and it's arguably responsible for the convoluted code above.
+
+Another important aspect when generating QRCodes is that SwiftUI will generate images only big enough to show the necessary pixels on screen, which will likely be too small. If you scale the image, it will also try to interpolate, giving your QRCode an undesired blur effect. That's why we need to turn interpolation off as below:
+
+```swift
+ Image(uiImage: generateQRCode(from: "\(name)\n\(emailAddress)"))
+    .interpolation(.none)
+    .resizable()
+    .scaledToFit()
+    .frame(width: 200, height: 200)
+```
+
+I also find surprising how there's no need to specify the QRCode type. iOS seems to understand the name and email in the example above in two consecutive lines:
+
+<div align="center">
+  <img src="./images/scanned_qrcode.jpeg" width="300"/>
+</div>
+
+Interesting enough is that I can also use Swift libraries to customize QRCodes. With a little help from ChatGPT, the code below creates a QRCode with custom colors and a logo in the middle (here only for my reference, I haven't tested the result yet):
+
+```swift
+import SwiftUI
+import CoreImage.CIFilterBuiltins
+
+struct CustomQRCodeView: View {
+    let context = CIContext()
+    let filter = CIFilter.qrCodeGenerator()
+    
+    var body: some View {
+        if let qrImage = generateCustomQRCode(from: "https://www.ag24horas.com.br") {
+            Image(uiImage: qrImage)
+                .resizable()
+                .interpolation(.none)
+                .scaledToFit()
+                .frame(width: 250, height: 250)
+        } else {
+            Text("Error while creating the QRCode")
+        }
+    }
+    
+    func generateCustomQRCode(from string: String) -> UIImage? {
+        // 1. Creates the QRCode
+        let data = Data(string.utf8)
+        filter.setValue(data, forKey: "inputMessage")
+
+        // the optional value below increases the error correction level to "H" (High)
+        filter.setValue("H", forKey: "inputCorrectionLevel")
+        
+        guard let qrCIImage = filter.outputImage else { return nil }
+
+        // 2. Applies the color
+        let colorFilter = CIFilter.falseColor()
+        colorFilter.inputImage = qrCIImage
+        colorFilter.color0 = CIColor(color: UIColor.systemPurple) // cor dos quadrados
+        colorFilter.color1 = CIColor(color: UIColor.white)        // cor de fundo
+        
+        guard let coloredQRImage = colorFilter.outputImage else { return nil }
+
+        // 3. Converts to CGImage e resizes
+        if let cgImage = context.createCGImage(coloredQRImage, from: coloredQRImage.extent) {
+            let qrUIImage = UIImage(cgImage: cgImage, scale: 1.0, orientation: .up)
+            
+            // 4. Add logo to the middle of the image
+            return addLogo(to: qrUIImage, logo: UIImage(named: "logo")!)
+        }
+        
+        return nil
+    }
+    
+    func addLogo(to qrImage: UIImage, logo: UIImage) -> UIImage {
+        let size = qrImage.size
+        let renderer = UIGraphicsImageRenderer(size: size)
+        
+        return renderer.image { _ in
+            qrImage.draw(in: CGRect(origin: .zero, size: size))
+            
+            let logoSize = CGSize(width: size.width * 0.25, height: size.height * 0.25)
+            let logoOrigin = CGPoint(
+                x: (size.width - logoSize.width) / 2,
+                y: (size.height - logoSize.height) / 2
+            )
+            
+            logo.draw(in: CGRect(origin: logoOrigin, size: logoSize))
+        }
+    }
+}
+```
+
 ## Acknowledgments
 
 Original code created by: [Paul Hudson - @twostraws](https://x.com/twostraws) (Thank you!)
