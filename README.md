@@ -202,7 +202,9 @@ Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/adding-swi
 - > Change the minor number when they added features that don’t break any APIs.
 - > Change the major number when they do break APIs.
 
-An interesting part of the code: >We need to convert that array of integers into strings. This only takes one line of code in Swift, because sequences have a `map()` method that lets us convert an array of one type into an array of another type by applying a function to each element. In our case, we want to initialize a new string from each integer, so we can use `String.init` as the function we want to call.
+An interesting part of the code: 
+
+>We need to convert that array of integers into strings. This only takes one line of code in Swift, because sequences have a `map()` method that lets us convert an array of one type into an array of another type by applying a function to each element. In our case, we want to initialize a new string from each integer, so we can use `String.init` as the function we want to call.
 
 ```swift
 var results: String {
