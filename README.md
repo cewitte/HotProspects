@@ -426,6 +426,69 @@ struct CustomQRCodeView: View {
 }
 ```
 
+### Posting notifications to the lock screen
+
+Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/posting-notifications-to-the-lock-screen)
+
+Branch: `release`
+
+Sending a local notification (one that does not relies on Apple's cloud services) requires 2 steps:
+
+1- Import the package
+
+```swift
+import UserNotifications
+```
+
+2- Create a `func` to add the notification:
+
+```swift
+func addNotification(for prospect: Prospect) {
+    let center = UNUserNotificationCenter.current()
+
+    let addRequest = {
+        let content = UNMutableNotificationContent()
+        content.title = "Contact \(prospect.name)"
+        content.subtitle = prospect.emailAddress
+        content.sound = UNNotificationSound.default
+
+        var dateComponents = DateComponents()
+        dateComponents.hour = 9
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+        center.add(request)
+    }
+
+    center.getNotificationSettings { settings in
+        if settings.authorizationStatus == .authorized {
+            addRequest()
+        } else {
+            center.requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
+                if success {
+                    addRequest()
+                } else if let error {
+                    print(error.localizedDescription)
+                }
+            }
+        }
+    }
+}
+```
+
+The code above will trigger an alert at 9am. For testing purposes, we can replace the `trigger` above with the following code, which triggers the alert after 5 seconds:
+
+```swift
+let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
+```
+
+Here's the final result (with the alert set to 5 seconds for testing):
+
+<div align="center">
+  <img src="./images/trigger_alert.gif" width="300"/>
+</div>
+
+
 ## Acknowledgments
 
 Original code created by: [Paul Hudson - @twostraws](https://x.com/twostraws) (Thank you!)
