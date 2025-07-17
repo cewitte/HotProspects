@@ -147,6 +147,7 @@ List(users, id:\.self, selection: $selection) { user in
         }
 }
 ```
+
 ### Scheduling local notifications
 
 Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/scheduling-local-notifications)
@@ -201,7 +202,9 @@ Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/adding-swi
 - > Change the minor number when they added features that don’t break any APIs.
 - > Change the major number when they do break APIs.
 
-An interesting part of the code: >We need to convert that array of integers into strings. This only takes one line of code in Swift, because sequences have a `map()` method that lets us convert an array of one type into an array of another type by applying a function to each element. In our case, we want to initialize a new string from each integer, so we can use `String.init` as the function we want to call.
+An interesting part of the code: 
+
+>We need to convert that array of integers into strings. This only takes one line of code in Swift, because sequences have a `map()` method that lets us convert an array of one type into an array of another type by applying a function to each element. In our case, we want to initialize a new string from each integer, so we can use `String.init` as the function we want to call.
 
 ```swift
 var results: String {
@@ -210,6 +213,281 @@ var results: String {
     return strings.formatted()
 }
 ```
+
+### Building our tab bar
+
+Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/building-our-tab-bar)
+
+Branch: `release`
+
+`TavView`is very easy to be implemented, and the code speaks for itself:
+
+```swift
+TabView {
+    ProspectsView()
+        .tabItem {
+            Label("Everyone", systemImage: "person.3")
+        }
+    ProspectsView()
+        .tabItem {
+            Label("Contacted", systemImage: "checkmark.circle")
+        }
+    ProspectsView()
+        .tabItem {
+            Label("Uncontacted", systemImage: "questionmark.diamond")
+        }
+    MeView()
+        .tabItem {
+            Label("Me", systemImage: "person.crop.square")
+        }
+}
+```
+
+### Storing our data with SwiftData
+
+Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/storing-our-data-with-swiftdata)
+
+Notes on using `SwiftData`:
+
+It requires a class that works as a model, like the one below which includes the `@Model` macro _(note: don't forget to `import SwiftData` whenever `model`, etc are referenced)_:
+
+```swift
+@Model
+class Prospect {
+    var name: String
+    var emailAddress: String
+    var isContacted: Bool
+}
+```
+
+Then add the `.modelContainer()`to hold the data as below:
+
+```swift
+WindowGroup {
+    ContentView()
+}
+.modelContainer(for: Prospect.self)
+```
+
+Finally, use it within your views...
+
+```swift
+@Query(sort: \Prospect.name) var prospects: [Prospect]
+@Environment(\.modelContext) var modelContext
+```
+
+... while not forgetting to add the `.modelContainer` for previews:
+
+```swift
+#Preview {
+    ProspectsView(filter: .none)
+        .modelContainer(for: Prospect.self)
+}
+```
+
+### Dynamically filtering our SwiftData query
+
+Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/dynamically-filtering-our-swiftdata-query)
+
+Branch: `release`
+
+The line below queries the database for all the Prospects and assings them to a Prospect array sorted by name.
+
+`@Query(sort: \Prospect.name) var prospects: [Prospect]`
+
+>We already have a default query in place, but if we add an initializer we can override that when a filter is set.
+
+```swift
+init(filter: FilterType) {
+    self.filter = filter
+
+    if filter != .none {
+        let showContactedOnly = filter == .contacted
+
+        _prospects = Query(filter: #Predicate {
+            $0.isContacted == showContactedOnly
+        }, sort: [SortDescriptor(\Prospect.name)])
+    }
+}
+```
+
+### Generating and scaling up a QR code
+
+Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/generating-and-scaling-up-a-qr-code)
+
+Here Paul teaches us how to create a QRCode in Swift, and perhaps unsurprisingly, Apple has a library to help us do so. The first task is importing this package:
+
+```swift
+import CoreImage.CIFilterBuiltins
+```
+
+Then here's a function that easily creates (but, of course, not reads) QRCodes:
+
+```swift
+func generateQRCode(from string: String) -> UIImage {
+    filter.message = Data(string.utf8)
+    
+    if let outPutImage = filter.outputImage {
+        if let cgimage = context.createCGImage(outPutImage, from: outPutImage.extent) {
+            
+            return UIImage(cgImage: cgimage)
+        }
+    }
+    
+    return UIImage(systemName: "xmark.circle") ?? UIImage()
+}
+```
+
+SwiftUI's image generation process is kind of confusing, and it's arguably responsible for the convoluted code above.
+
+Another important aspect when generating QRCodes is that SwiftUI will generate images only big enough to show the necessary pixels on screen, which will likely be too small. If you scale the image, it will also try to interpolate, giving your QRCode an undesired blur effect. That's why we need to turn interpolation off as below:
+
+```swift
+ Image(uiImage: generateQRCode(from: "\(name)\n\(emailAddress)"))
+    .interpolation(.none)
+    .resizable()
+    .scaledToFit()
+    .frame(width: 200, height: 200)
+```
+
+I also find surprising how there's no need to specify the QRCode type. iOS seems to understand the name and email in the example above in two consecutive lines:
+
+<div align="center">
+  <img src="./images/scanned_qrcode.jpeg" width="300"/>
+</div>
+
+Interesting enough is that I can also use Swift libraries to customize QRCodes. With a little help from ChatGPT, the code below creates a QRCode with custom colors and a logo in the middle (here only for my reference, I haven't tested the result yet):
+
+```swift
+import SwiftUI
+import CoreImage.CIFilterBuiltins
+
+struct CustomQRCodeView: View {
+    let context = CIContext()
+    let filter = CIFilter.qrCodeGenerator()
+    
+    var body: some View {
+        if let qrImage = generateCustomQRCode(from: "https://www.ag24horas.com.br") {
+            Image(uiImage: qrImage)
+                .resizable()
+                .interpolation(.none)
+                .scaledToFit()
+                .frame(width: 250, height: 250)
+        } else {
+            Text("Error while creating the QRCode")
+        }
+    }
+    
+    func generateCustomQRCode(from string: String) -> UIImage? {
+        // 1. Creates the QRCode
+        let data = Data(string.utf8)
+        filter.setValue(data, forKey: "inputMessage")
+
+        // the optional value below increases the error correction level to "H" (High)
+        filter.setValue("H", forKey: "inputCorrectionLevel")
+        
+        guard let qrCIImage = filter.outputImage else { return nil }
+
+        // 2. Applies the color
+        let colorFilter = CIFilter.falseColor()
+        colorFilter.inputImage = qrCIImage
+        colorFilter.color0 = CIColor(color: UIColor.systemPurple) // cor dos quadrados
+        colorFilter.color1 = CIColor(color: UIColor.white)        // cor de fundo
+        
+        guard let coloredQRImage = colorFilter.outputImage else { return nil }
+
+        // 3. Converts to CGImage e resizes
+        if let cgImage = context.createCGImage(coloredQRImage, from: coloredQRImage.extent) {
+            let qrUIImage = UIImage(cgImage: cgImage, scale: 1.0, orientation: .up)
+            
+            // 4. Add logo to the middle of the image
+            return addLogo(to: qrUIImage, logo: UIImage(named: "logo")!)
+        }
+        
+        return nil
+    }
+    
+    func addLogo(to qrImage: UIImage, logo: UIImage) -> UIImage {
+        let size = qrImage.size
+        let renderer = UIGraphicsImageRenderer(size: size)
+        
+        return renderer.image { _ in
+            qrImage.draw(in: CGRect(origin: .zero, size: size))
+            
+            let logoSize = CGSize(width: size.width * 0.25, height: size.height * 0.25)
+            let logoOrigin = CGPoint(
+                x: (size.width - logoSize.width) / 2,
+                y: (size.height - logoSize.height) / 2
+            )
+            
+            logo.draw(in: CGRect(origin: logoOrigin, size: logoSize))
+        }
+    }
+}
+```
+
+### Posting notifications to the lock screen
+
+Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/posting-notifications-to-the-lock-screen)
+
+Branch: `release`
+
+Sending a local notification (one that does not relies on Apple's cloud services) requires 2 steps:
+
+1- Import the package
+
+```swift
+import UserNotifications
+```
+
+2- Create a `func` to add the notification:
+
+```swift
+func addNotification(for prospect: Prospect) {
+    let center = UNUserNotificationCenter.current()
+
+    let addRequest = {
+        let content = UNMutableNotificationContent()
+        content.title = "Contact \(prospect.name)"
+        content.subtitle = prospect.emailAddress
+        content.sound = UNNotificationSound.default
+
+        var dateComponents = DateComponents()
+        dateComponents.hour = 9
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+        center.add(request)
+    }
+
+    center.getNotificationSettings { settings in
+        if settings.authorizationStatus == .authorized {
+            addRequest()
+        } else {
+            center.requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
+                if success {
+                    addRequest()
+                } else if let error {
+                    print(error.localizedDescription)
+                }
+            }
+        }
+    }
+}
+```
+
+The code above will trigger an alert at 9am. For testing purposes, we can replace the `trigger` above with the following code, which triggers the alert after 5 seconds:
+
+```swift
+let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
+```
+
+Here's the final result (with the alert set to 5 seconds for testing):
+
+<div align="center">
+  <img src="./images/trigger_alert.gif" width="300"/>
+</div>
+
 
 ## Acknowledgments
 
