@@ -504,6 +504,83 @@ There are certainly more elegant solutions, but being able to resolve this with 
   <img src="./images/challenge_1.gif" width="300"/>
 </div>
 
+### Challenge 2
+
+>Add an editing screen, so users can adjust the name and email address of someone they scanned previously. (Tip: Use the simple form of `NavigationLink` rather than `navigationDestination()`, to avoid your list selection code confusing the navigation link.)
+
+To complete this challenge, I created a simple `EditProspectView` as below:
+
+```swift
+import SwiftUI
+
+struct EditProspectView: View {   
+    @State var prospect: Prospect
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(footer: Text("Changes are saved automatically.")) {
+                    TextField("Name", text: $prospect.name)
+                    TextField("Email", text: $prospect.emailAddress)
+                }
+            }
+            .navigationTitle("Edit " + prospect.name)
+        }
+    }
+}
+
+#Preview {
+    EditProspectView(prospect: Prospect(name: "Test", emailAddress: "test@test.com"))
+}
+```
+
+It's interesting noting that a `save` button is not necessary because Swift tracks changes to the model, so I left it off with the message _Changes are saved automatically_ in the form's footer. 
+
+Then following Paul's instructions, I've added a simple `NavigationLink` to the ProspectsView as below:
+
+```swift
+NavigationLink(destination: EditProspectView(prospect: prospect)) {
+    VStack(alignment: .leading) {
+        
+        Text(prospect.name)
+            .font(.headline) + (title == "Everyone" && prospect.isContacted ? Text(" ") + Text(Image(systemName: "checkmark.seal.fill")) : Text(""))
+        Text(prospect.emailAddress)
+            .foregroundStyle(.secondary)
+        
+        
+    }
+    .swipeActions {
+        Button("Delete", systemImage: "trash", role: .destructive){
+            modelContext.delete(prospect)
+        }
+        
+        if prospect.isContacted {
+            Button("Mark Uncontacted", systemImage: "person.crop.circle.badge.xmark") {
+                prospect.isContacted.toggle()
+            }
+            .tint(.blue)
+        } else {
+            Button("Mark Contacted", systemImage: "person.crop.circle.fill.badge.checkmark") {
+                prospect.isContacted.toggle()
+            }
+            .tint(.green)
+            
+            Button("Remind Me", systemImage: "bell") {
+                addNotifications(for: prospect)
+            }
+            .tint(.orange)
+        }
+    }
+    .tag(prospect)
+}
+```
+
+Here's the result of the completed challenge:
+
+<div align="center">
+  <img src="./images/challenge_2.gif" width="300"/>
+</div>
+
 ## Acknowledgments
 
 Original code created by: [Paul Hudson - @twostraws](https://x.com/twostraws) (Thank you!)
