@@ -202,7 +202,7 @@ Source URL: [link](https://www.hackingwithswift.com/books/ios-swiftui/adding-swi
 - > Change the minor number when they added features that don’t break any APIs.
 - > Change the major number when they do break APIs.
 
-An interesting part of the code: 
+An interesting part of the code:
 
 >We need to convert that array of integers into strings. This only takes one line of code in Swift, because sequences have a `map()` method that lets us convert an array of one type into an array of another type by applying a function to each element. In our case, we want to initialize a new string from each integer, so we can use `String.init` as the function we want to call.
 
@@ -488,6 +488,146 @@ Here's the final result (with the alert set to 5 seconds for testing):
   <img src="./images/trigger_alert.gif" width="300"/>
 </div>
 
+### Challenge 1
+
+>Add an icon to the “Everyone” screen showing whether a prospect was contacted or not.
+
+I was able to complete this challenge with a single line of code:
+
+```swift
++ (title == "Everyone" && prospect.isContacted ? Text(" ") + Text(Image(systemName: "checkmark.seal.fill")) : Text(""))
+```
+
+There are certainly more elegant solutions, but being able to resolve this with a single line in a couple of minutes was enough for me. Here's the end result:
+
+<div align="center">
+  <img src="./images/challenge_1.gif" width="300"/>
+</div>
+
+### Challenge 2
+
+>Add an editing screen, so users can adjust the name and email address of someone they scanned previously. (Tip: Use the simple form of `NavigationLink` rather than `navigationDestination()`, to avoid your list selection code confusing the navigation link.)
+
+To complete this challenge, I created a simple `EditProspectView` as below:
+
+```swift
+import SwiftUI
+
+struct EditProspectView: View {   
+    @State var prospect: Prospect
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(footer: Text("Changes are saved automatically.")) {
+                    TextField("Name", text: $prospect.name)
+                    TextField("Email", text: $prospect.emailAddress)
+                }
+            }
+            .navigationTitle("Edit " + prospect.name)
+        }
+    }
+}
+
+#Preview {
+    EditProspectView(prospect: Prospect(name: "Test", emailAddress: "test@test.com"))
+}
+```
+
+It's interesting noting that a `save` button is not necessary because Swift tracks changes to the model, so I left it off with the message _Changes are saved automatically_ in the form's footer.
+
+Then following Paul's instructions, I've added a simple `NavigationLink` to the ProspectsView as below:
+
+```swift
+NavigationLink(destination: EditProspectView(prospect: prospect)) {
+    VStack(alignment: .leading) {
+        
+        Text(prospect.name)
+            .font(.headline) + (title == "Everyone" && prospect.isContacted ? Text(" ") + Text(Image(systemName: "checkmark.seal.fill")) : Text(""))
+        Text(prospect.emailAddress)
+            .foregroundStyle(.secondary)
+        
+        
+    }
+    .swipeActions {
+        Button("Delete", systemImage: "trash", role: .destructive){
+            modelContext.delete(prospect)
+        }
+        
+        if prospect.isContacted {
+            Button("Mark Uncontacted", systemImage: "person.crop.circle.badge.xmark") {
+                prospect.isContacted.toggle()
+            }
+            .tint(.blue)
+        } else {
+            Button("Mark Contacted", systemImage: "person.crop.circle.fill.badge.checkmark") {
+                prospect.isContacted.toggle()
+            }
+            .tint(.green)
+            
+            Button("Remind Me", systemImage: "bell") {
+                addNotifications(for: prospect)
+            }
+            .tint(.orange)
+        }
+    }
+    .tag(prospect)
+}
+```
+
+Here's the result of the completed challenge:
+
+<div align="center">
+  <img src="./images/challenge_2.gif" width="300"/>
+</div>
+
+### Challenge 3
+
+>Allow users to customize the way contacts are sorted – by name or by most recent.
+
+I completed this challenge by taking the following steps:
+
+1. Created a new variable to hold the sorted state. It makes sense to be a `Bool` since we have only two sorting options:
+
+```swift
+@State private var sortByName: Bool = true  // by name is the default option
+```
+
+2. Replaced the `Edit` button (now redundant, after challenge 2) with a button that toggles bewtween two states: `Sort by Date` and `Sort by Name`(the default):
+
+```swift
+ToolbarItem(placement: .topBarLeading) {
+    Button(sortByName ? "Sort by Date" : "Sort by Name") {
+        sortByName.toggle()
+    }
+}
+```
+
+3. Created a computed property that sorts the prospects by name or most recent date according to the boolean value in `sortByName`:
+
+```swift
+var sortedProspects: [Prospect] {
+    sortByName ? prospects.sorted { $0.name < $1.name } : prospects.sorted { $0.dateAdded > $1.dateAdded }
+}
+```
+
+4. Finally, the `List` now reads from `sortedProspects` instead of the default array that loads with the view.
+
+```swift
+NavigationStack {
+            List(sortedProspects, selection: $selectedProspects) { prospect in
+// code continues
+```
+
+Here's the final result:
+
+<div align="center">
+  <img src="./images/challenge_3.gif" width="300"/>
+</div>
+
+Of course, the solution could have been more complete, for instance, the user could be given the option of sorting ascending and descending, but honestly, I didn`t feel like spending more time on this...
+
+>"I will always choose a lazy person to do a difficult job because a lazy person will find an easy way to do it." (Bill Gates)
 
 ## Acknowledgments
 
