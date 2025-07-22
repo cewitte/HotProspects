@@ -35,9 +35,15 @@ struct ProspectsView: View {
         }
     }
     
+    @State private var sortByName: Bool = true
+    
+    var sortedProspects: [Prospect] {
+        sortByName ? prospects.sorted { $0.name < $1.name } : prospects.sorted { $0.dateAdded > $1.dateAdded }
+    }
+    
     var body: some View {
         NavigationStack {
-            List(prospects, selection: $selectedProspects) { prospect in
+            List(sortedProspects, selection: $selectedProspects) { prospect in
                 
                 NavigationLink(destination: EditProspectView(prospect: prospect)) {
                     VStack(alignment: .leading) {
@@ -47,6 +53,9 @@ struct ProspectsView: View {
                         Text(prospect.emailAddress)
                             .foregroundStyle(.secondary)
                         
+                        Text("Added on \(prospect.dateAdded)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                         
                     }
                     .swipeActions {
@@ -83,7 +92,10 @@ struct ProspectsView: View {
                 }
                             
                 ToolbarItem(placement: .topBarLeading) {
-                    EditButton()
+                    Button(sortByName ? "Sort by Date" : "Sort by Name") {
+                        sortByName.toggle()
+                        print(sortByName)
+                    }
                 }
                 
                 if !selectedProspects.isEmpty {
