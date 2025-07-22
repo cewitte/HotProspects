@@ -24,87 +24,27 @@ struct ContentView: View {
     let possibleNumbers = 1...60
     
     var body: some View {
-        Image(.example)
-            .interpolation(.none)
-            .resizable()
-            .scaledToFit()
-            .background(.black)
-        
-        List(users, id:\.self, selection: $selection) { user in
-            Text(user)
-                .swipeActions {
-                    Button("Delete", systemImage: "minus.circle", role: .destructive) {
-                        print("Deleting")
-                    }
+        TabView {
+            ProspectsView(filter: .none)
+                .tabItem {
+                    Label("Everyone", systemImage: "person.3")
                 }
-                .swipeActions(edge: .leading) {
-                    Button("Pin", systemImage: "pin") {
-                        print("Pinning")
-                    }
-                    .tint(.orange)
+            
+            ProspectsView(filter: .contacted)
+                .tabItem {
+                    Label("Contact", systemImage: "checkmark.circle")
+                }
+            
+            ProspectsView(filter: .uncontacted)
+                .tabItem {
+                    Label("Uncontacted", systemImage: "questionmark.diamond")
+                }
+            
+            MeView()
+                .tabItem {
+                    Label("Me", systemImage: "person.crop.square")
                 }
         }
-        
-        Text("Hello, color!")
-            .padding()
-            .background(backgroundColor)
-        
-        Text("Change Color")
-            .padding()
-            .contextMenu {
-                Button("Red", systemImage: "checkmark.circle.fill", role: .destructive) {
-                    backgroundColor = .red
-                }
-                
-                Button("Green") {
-                    backgroundColor = .green
-                }
-                
-                Button("Blue") {
-                    backgroundColor = .blue
-                }
-            }
-        
-        VStack {
-            Button("Request Permission") {
-                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
-                    if success {
-                        print("All set!")
-                    } else if let error {
-                        print(error.localizedDescription)
-                    }
-                }
-            }
-
-            Button("Schedule Notification") {
-                let content = UNMutableNotificationContent()
-                content.title = "Feed the cat"
-                content.subtitle = "It looks hungry"
-                content.sound = UNNotificationSound.default
-
-                // show this notification five seconds from now
-                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
-
-                // choose a random identifier
-                let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
-
-                // add our notification request
-                UNUserNotificationCenter.current().add(request)
-            }
-        }
-        
-        Text(results)
-        
-        if !selection.isEmpty {
-            Text("You selected: \(selection.formatted())")
-        }
-        
-        Text(output)
-            .task {
-                await fetchReadings()
-            }
-        
-        EditButton()
     }
     
     func fetchReadings() async {
